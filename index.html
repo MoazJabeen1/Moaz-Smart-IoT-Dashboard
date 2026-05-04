@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Node | Enterprise Dashboard</title>
+    
+    <!-- Load Professional Charting Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+    <style>
+        /* === THEME VARIABLES === */
+        :root {
+            --bg-color: #f4f7fa;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #7f8c8d;
+            --accent: #00d28a;
+            --shadow: rgba(0,0,0,0.05);
+            --border-color: #e0e0e0;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #a0aab5;
+            --shadow: rgba(0,0,0,0.4);
+            --border-color: #333333;
+        }
+
+        /* === GLOBAL STYLES === */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg-color); 
+            margin: 0; 
+            padding: 20px 20px 80px 20px; 
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* === HEADER === */
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: clamp(24px, 4vw, 32px); }
+        .header p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px; }
+        
+        .live-indicator {
+            display: inline-block; width: 10px; height: 10px; background-color: red;
+            border-radius: 50%; margin-right: 5px; animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 82, 82, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 82, 82, 0); }
+        }
+        
+        /* === RESPONSIVE KPI CARDS === */
+        .kpi-container {
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+            gap: 15px; 
+            margin-bottom: 30px;
+        }
+        .kpi-card {
+            background: var(--card-bg); padding: 20px; border-radius: 12px;
+            box-shadow: 0 4px 15px var(--shadow); text-align: center; border-top: 4px solid;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .kpi-card h3 { margin: 0; font-size: 12px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+        .kpi-card .value { font-size: clamp(28px, 4vw, 36px); font-weight: bold; margin: 10px 0; color: var(--text-main); }
+        .kpi-card .unit { font-size: 14px; color: var(--text-muted); }
+
+        /* === RESPONSIVE CHARTS === */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
+            gap: 20px;
+        }
+        @media (min-width: 900px) {
+            .charts-container { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); }
+        }
+        .chart-card {
+            background: var(--card-bg); padding: 15px; border-radius: 12px;
+            box-shadow: 0 4px 15px var(--shadow); position: relative;
+            transition: background-color 0.3s;
+        }
+        .chart-help { font-size: 11px; color: var(--text-muted); text-align: right; margin-bottom: 10px; font-style: italic; }
+        
+        /* THE FIX: A strictly sized wrapper to prevent infinite canvas stretching */
+        .canvas-wrapper {
+            position: relative;
+            height: 350px; 
+            width: 100%;
+        }
+
+        /* === FLOATING ACCESSIBILITY MENU === */
+        .fab-container {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 1000;
+        }
+        .fab-btn {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .fab-btn:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Smart Node Telemetry by Moaz Jabeen</h1>
+        <p><span class="live-indicator"></span>LIVE SYSTEM FEED</p>
+    </div>
+
+    <!-- Live Numbers -->
+    <div class="kpi-container">
+        <div class="kpi-card" style="border-top-color: #ff6b6b;">
+            <h3>Temperature</h3><div class="value" id="val-temp">--</div><div class="unit">°C</div>
+        </div>
+        <div class="kpi-card" style="border-top-color: #4ecdc4;">
+            <h3>Humidity</h3><div class="value" id="val-hum">--</div><div class="unit">%</div>
+        </div>
+        <div class="kpi-card" style="border-top-color: #1dd1a1;">
+            <h3>Distance</h3><div class="value" id="val-dist">--</div><div class="unit">cm</div>
+        </div>
+        <div class="kpi-card" style="border-top-color: #feca57;">
+            <h3>Light</h3><div class="value" id="val-light">--</div><div class="unit">Lux</div>
+        </div>
+        <div class="kpi-card" style="border-top-color: #5f27cd;">
+            <h3>Sound</h3><div class="value" id="val-sound">--</div><div class="unit">Peak</div>
+        </div>
+    </div>
+
+    <!-- Grouped Charts with Canvas Wrappers -->
+    <div class="charts-container">
+        <div class="chart-card">
+            <div class="chart-help">Scroll to Zoom | Drag to Pan</div>
+            <div class="canvas-wrapper">
+                <canvas id="climateChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-help">Scroll to Zoom | Drag to Pan</div>
+            <div class="canvas-wrapper">
+                <canvas id="proxChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-help">Scroll to Zoom | Drag to Pan</div>
+            <div class="canvas-wrapper">
+                <canvas id="ambientChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accessibility Floating Button -->
+    <div class="fab-container">
+        <button class="fab-btn" onclick="toggleTheme()" id="themeBtn">
+            🌓 Dark Mode
+        </button>
+    </div>
+
+    <script>
+        const TOKEN = "EiwsBHKwDjhxoLz_p1rqZfMIywuvdPxR";
+        const maxDataPoints = 40; 
+
+        Chart.defaults.color = '#7f8c8d';
+
+        const zoomOptions = {
+            pan: { enabled: true, mode: 'xy' },
+            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' }
+        };
+
+        // --- 1. CLIMATE CHART (Updated with Grace padding for flat lines) ---
+        const climateChart = new Chart(document.getElementById('climateChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [
+                { label: 'Temp (°C)', borderColor: '#ff6b6b', data: [], yAxisID: 'yTemp', fill: false, tension: 0.4, borderWidth: 2 },
+                { label: 'Humidity (%)', borderColor: '#4ecdc4', data: [], yAxisID: 'yHum', fill: false, tension: 0.4, borderWidth: 2 }
+            ]},
+            options: { 
+                responsive: true, maintainAspectRatio: false, plugins: { zoom: zoomOptions, title: { display: true, text: 'Climate Control' } },
+                scales: {
+                    x: { grid: { color: 'rgba(0,0,0,0.05)' } },
+                    yTemp: { 
+                        type: 'linear', position: 'left', title: { display: true, text: '°C' }, 
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        grace: 5 // Prevents the graph from over-zooming on a stable temperature
+                    },
+                    yHum: { 
+                        type: 'linear', position: 'right', title: { display: true, text: '%' }, 
+                        grid: { drawOnChartArea: false },
+                        grace: 10 // Prevents the graph from over-zooming on stable humidity
+                    }
+                }
+            }
+        });
+
+        // --- 2. PROXIMITY CHART ---
+        const proxChart = new Chart(document.getElementById('proxChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [
+                { label: 'Distance (cm)', borderColor: '#1dd1a1', data: [], fill: false, tension: 0.4, borderWidth: 2 }
+            ]},
+            options: { 
+                responsive: true, maintainAspectRatio: false, plugins: { zoom: zoomOptions, title: { display: true, text: 'Proximity & Security' } },
+                scales: { 
+                    x: { grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y: { type: 'linear', title: { display: true, text: 'Centimeters' }, grid: { color: 'rgba(0,0,0,0.05)' } } 
+                }
+            }
+        });
+
+        // --- 3. AMBIENT CHART ---
+        const ambientChart = new Chart(document.getElementById('ambientChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [
+                { label: 'Light Level', borderColor: '#feca57', data: [], yAxisID: 'yLight', fill: false, tension: 0.4, borderWidth: 2 },
+                { label: 'Sound Peak', borderColor: '#5f27cd', data: [], yAxisID: 'ySound', fill: false, tension: 0.4, borderWidth: 2 }
+            ]},
+            options: { 
+                responsive: true, maintainAspectRatio: false, plugins: { zoom: zoomOptions, title: { display: true, text: 'Ambient Environment' } },
+                scales: {
+                    x: { grid: { color: 'rgba(0,0,0,0.05)' } },
+                    yLight: { type: 'linear', position: 'left', title: { display: true, text: 'Light (Lux)' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    ySound: { type: 'linear', position: 'right', title: { display: true, text: 'Sound' }, grid: { drawOnChartArea: false } }
+                }
+            }
+        });
+
+        // --- THEME TOGGLE LOGIC ---
+        function toggleTheme() {
+            const body = document.documentElement;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);
+            
+            document.getElementById('themeBtn').innerHTML = newTheme === 'light' ? '🌓 Dark Mode' : '☀️ Light Mode';
+
+            const gridColor = newTheme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+            const textColor = newTheme === 'light' ? '#7f8c8d' : '#a0aab5';
+
+            Chart.defaults.color = textColor;
+
+            [climateChart, proxChart, ambientChart].forEach(chart => {
+                chart.options.plugins.title.color = textColor;
+                chart.options.scales.x.grid.color = gridColor;
+                chart.options.scales.x.ticks.color = textColor;
+                
+                for (let axis in chart.options.scales) {
+                    if (axis.startsWith('y')) {
+                        if (chart.options.scales[axis].grid.drawOnChartArea !== false) {
+                            chart.options.scales[axis].grid.color = gridColor;
+                        }
+                        chart.options.scales[axis].ticks.color = textColor;
+                        chart.options.scales[axis].title.color = textColor;
+                    }
+                }
+                chart.update(); 
+            });
+        }
+
+        // --- FETCH ENGINE ---
+        async function fetchAllData() {
+            try {
+                const pins = ['v0', 'v1', 'v2', 'v3', 'v4'];
+                const requests = pins.map(pin => fetch(`https://blynk.cloud/external/api/get?token=${TOKEN}&${pin}`).then(res => res.text()));
+                const values = await Promise.all(requests);
+                
+                const temp = Number(values[0]);
+                const hum = Number(values[1]);
+                const light = Number(values[2]);
+                const dist = Number(values[3]);
+                const sound = Number(values[4]);
+
+                // .toFixed(1) forces the numbers to display professionally with 1 decimal place!
+                document.getElementById('val-temp').innerText = isNaN(temp) ? "--" : temp.toFixed(1);
+                document.getElementById('val-hum').innerText = isNaN(hum) ? "--" : hum.toFixed(1);
+                
+                document.getElementById('val-light').innerText = isNaN(light) ? "--" : light;
+                document.getElementById('val-dist').innerText = isNaN(dist) ? "--" : dist;
+                document.getElementById('val-sound').innerText = isNaN(sound) ? "--" : sound;
+
+                const now = new Date();
+                const timeLabel = now.getHours() + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+
+                updateChart(climateChart, timeLabel, [temp, hum]);
+                updateChart(proxChart, timeLabel, [dist]);
+                updateChart(ambientChart, timeLabel, [light, sound]);
+
+            } catch (error) { console.error("Network Error:", error); }
+        }
+
+        function updateChart(chart, label, dataArray) {
+            chart.data.labels.push(label);
+            chart.data.datasets.forEach((dataset, index) => { dataset.data.push(dataArray[index]); });
+            if (chart.data.labels.length > maxDataPoints) {
+                chart.data.labels.shift();
+                chart.data.datasets.forEach((dataset) => dataset.data.shift());
+            }
+            chart.update('none'); 
+        }
+
+        fetchAllData();
+        setInterval(fetchAllData, 2000);
+    </script>
+</body>
+</html>
