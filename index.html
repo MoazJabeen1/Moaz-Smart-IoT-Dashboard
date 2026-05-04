@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Node | Enterprise Dashboard</title>
+    <title>Smart Node | Live Feed</title>
     
-    <!-- Load Professional Charting Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 
     <style>
-        /* === THEME VARIABLES === */
         :root {
             --bg-color: #f4f7fa;
             --card-bg: #ffffff;
@@ -31,95 +29,91 @@
             --border-color: #333333;
         }
 
-        /* === GLOBAL STYLES === */
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
             background-color: var(--bg-color); 
             margin: 0; 
             padding: 20px 20px 80px 20px; 
             color: var(--text-main);
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.3s;
         }
 
-        /* === HEADER === */
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { margin: 0; font-size: clamp(24px, 4vw, 32px); }
-        .header p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+        .sub-heading { 
+            margin-top: 10px; 
+            font-size: 15px; 
+            color: var(--text-muted); 
+        }
         
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(0, 210, 138, 0.1);
+            color: var(--accent);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 15px;
+        }
+
         .live-indicator {
-            display: inline-block; width: 10px; height: 10px; background-color: red;
-            border-radius: 50%; margin-right: 5px; animation: pulse 1.5s infinite;
+            width: 8px; height: 8px; background-color: #ff4757;
+            border-radius: 50%; margin-right: 8px; animation: pulse 1.5s infinite;
         }
+
         @keyframes pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 82, 82, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 82, 82, 0); }
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
         }
         
-        /* === RESPONSIVE KPI CARDS === */
         .kpi-container {
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-            gap: 15px; 
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 40px;
         }
         .kpi-card {
-            background: var(--card-bg); padding: 20px; border-radius: 12px;
-            box-shadow: 0 4px 15px var(--shadow); text-align: center; border-top: 4px solid;
-            transition: background-color 0.3s, box-shadow 0.3s;
+            background: var(--card-bg); padding: 25px; border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow); text-align: center; border-top: 4px solid;
         }
-        .kpi-card h3 { margin: 0; font-size: 12px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
-        .kpi-card .value { font-size: clamp(28px, 4vw, 36px); font-weight: bold; margin: 10px 0; color: var(--text-main); }
-        .kpi-card .unit { font-size: 14px; color: var(--text-muted); }
+        .kpi-card h3 { margin: 0; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .kpi-card .value { font-size: 36px; font-weight: 700; margin: 10px 0; color: var(--text-main); }
+        .kpi-card .unit { font-size: 13px; color: var(--text-muted); }
+        
+        .description {
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
 
-        /* === RESPONSIVE CHARTS === */
         .charts-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
-            gap: 20px;
+            gap: 25px;
         }
-        @media (min-width: 900px) {
-            .charts-container { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); }
+        /* FIXED: Forces 3 columns on large screens */
+        @media (min-width: 1000px) {
+            .charts-container { grid-template-columns: repeat(3, 1fr); }
         }
         .chart-card {
-            background: var(--card-bg); padding: 15px; border-radius: 12px;
-            box-shadow: 0 4px 15px var(--shadow); position: relative;
-            transition: background-color 0.3s;
+            background: var(--card-bg); padding: 20px; border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow);
+            position: relative;
         }
         .chart-help { font-size: 11px; color: var(--text-muted); text-align: right; margin-bottom: 10px; font-style: italic; }
-        
-        /* THE FIX: A strictly sized wrapper to prevent infinite canvas stretching */
-        .canvas-wrapper {
-            position: relative;
-            height: 350px; 
-            width: 100%;
-        }
+        .canvas-wrapper { position: relative; height: 320px; width: 100%; }
 
-        /* === FLOATING ACCESSIBILITY MENU === */
-        .fab-container {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            z-index: 1000;
-        }
+        .fab-container { position: fixed; bottom: 25px; right: 25px; z-index: 1000; }
         .fab-btn {
-            background-color: var(--card-bg);
-            color: var(--text-main);
-            border: 2px solid var(--border-color);
-            border-radius: 50px;
-            padding: 10px 20px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .fab-btn:hover {
-            transform: translateY(-3px);
-            border-color: var(--accent);
+            background-color: var(--card-bg); color: var(--text-main);
+            border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -127,61 +121,67 @@
 
     <div class="header">
         <h1>Smart Node Telemetry by Moaz Jabeen</h1>
-        <p><span class="live-indicator"></span>LIVE SYSTEM FEED</p>
+        <div class="sub-heading">Real-time data from the workspace environment.</div>
+        <div class="status-badge">
+            <span class="live-indicator"></span> Live System
+        </div>
     </div>
 
-    <!-- Live Numbers -->
     <div class="kpi-container">
         <div class="kpi-card" style="border-top-color: #ff6b6b;">
-            <h3>Temperature</h3><div class="value" id="val-temp">--</div><div class="unit">°C</div>
+            <h3>Temperature</h3>
+            <div class="value" id="val-temp">--</div>
+            <div class="unit">° Celsius</div>
+            <div class="description">Tracks the current temperature in the room.</div>
         </div>
         <div class="kpi-card" style="border-top-color: #4ecdc4;">
-            <h3>Humidity</h3><div class="value" id="val-hum">--</div><div class="unit">%</div>
+            <h3>Humidity</h3>
+            <div class="value" id="val-hum">--</div>
+            <div class="unit">% Relative</div>
+            <div class="description">Measures the moisture level in the air.</div>
         </div>
         <div class="kpi-card" style="border-top-color: #1dd1a1;">
-            <h3>Distance</h3><div class="value" id="val-dist">--</div><div class="unit">cm</div>
+            <h3>Distance</h3>
+            <div class="value" id="val-dist">--</div>
+            <div class="unit">Centimeters</div>
+            <div class="description">Radar data showing distance to nearby objects.</div>
         </div>
         <div class="kpi-card" style="border-top-color: #feca57;">
-            <h3>Light</h3><div class="value" id="val-light">--</div><div class="unit">Lux</div>
+            <h3>Light</h3>
+            <div class="value" id="val-light">--</div>
+            <div class="unit">Lux</div>
+            <div class="description">Current brightness levels of the area.</div>
         </div>
         <div class="kpi-card" style="border-top-color: #5f27cd;">
-            <h3>Sound</h3><div class="value" id="val-sound">--</div><div class="unit">Peak</div>
+            <h3>Sound</h3>
+            <div class="value" id="val-sound">--</div>
+            <div class="unit">Peak</div>
+            <div class="description">Captures noise spikes and audio activity.</div>
         </div>
     </div>
 
-    <!-- Grouped Charts with Canvas Wrappers -->
     <div class="charts-container">
         <div class="chart-card">
             <div class="chart-help">Scroll to Zoom | Drag to Pan</div>
-            <div class="canvas-wrapper">
-                <canvas id="climateChart"></canvas>
-            </div>
+            <div class="canvas-wrapper"><canvas id="climateChart"></canvas></div>
         </div>
         <div class="chart-card">
             <div class="chart-help">Scroll to Zoom | Drag to Pan</div>
-            <div class="canvas-wrapper">
-                <canvas id="proxChart"></canvas>
-            </div>
+            <div class="canvas-wrapper"><canvas id="proxChart"></canvas></div>
         </div>
         <div class="chart-card">
             <div class="chart-help">Scroll to Zoom | Drag to Pan</div>
-            <div class="canvas-wrapper">
-                <canvas id="ambientChart"></canvas>
-            </div>
+            <div class="canvas-wrapper"><canvas id="ambientChart"></canvas></div>
         </div>
     </div>
 
-    <!-- Accessibility Floating Button -->
     <div class="fab-container">
-        <button class="fab-btn" onclick="toggleTheme()" id="themeBtn">
-            🌓 Dark Mode
-        </button>
+        <button class="fab-btn" onclick="toggleTheme()" id="themeBtn">🌓 Dark Mode</button>
     </div>
 
     <script>
         const TOKEN = "EiwsBHKwDjhxoLz_p1rqZfMIywuvdPxR";
         const maxDataPoints = 40; 
-
         Chart.defaults.color = '#7f8c8d';
 
         const zoomOptions = {
@@ -189,7 +189,6 @@
             zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' }
         };
 
-        // --- 1. CLIMATE CHART (Updated with Grace padding for flat lines) ---
         const climateChart = new Chart(document.getElementById('climateChart').getContext('2d'), {
             type: 'line',
             data: { labels: [], datasets: [
@@ -200,21 +199,12 @@
                 responsive: true, maintainAspectRatio: false, plugins: { zoom: zoomOptions, title: { display: true, text: 'Climate Control' } },
                 scales: {
                     x: { grid: { color: 'rgba(0,0,0,0.05)' } },
-                    yTemp: { 
-                        type: 'linear', position: 'left', title: { display: true, text: '°C' }, 
-                        grid: { color: 'rgba(0,0,0,0.05)' },
-                        grace: 5 // Prevents the graph from over-zooming on a stable temperature
-                    },
-                    yHum: { 
-                        type: 'linear', position: 'right', title: { display: true, text: '%' }, 
-                        grid: { drawOnChartArea: false },
-                        grace: 10 // Prevents the graph from over-zooming on stable humidity
-                    }
+                    yTemp: { type: 'linear', position: 'left', title: { display: true, text: '°C' }, grid: { color: 'rgba(0,0,0,0.05)' }, grace: 5 },
+                    yHum: { type: 'linear', position: 'right', title: { display: true, text: '%' }, grid: { drawOnChartArea: false }, grace: 10 }
                 }
             }
         });
 
-        // --- 2. PROXIMITY CHART ---
         const proxChart = new Chart(document.getElementById('proxChart').getContext('2d'), {
             type: 'line',
             data: { labels: [], datasets: [
@@ -229,7 +219,6 @@
             }
         });
 
-        // --- 3. AMBIENT CHART ---
         const ambientChart = new Chart(document.getElementById('ambientChart').getContext('2d'), {
             type: 'line',
             data: { labels: [], datasets: [
@@ -246,7 +235,6 @@
             }
         });
 
-        // --- THEME TOGGLE LOGIC ---
         function toggleTheme() {
             const body = document.documentElement;
             const currentTheme = body.getAttribute('data-theme');
@@ -278,7 +266,6 @@
             });
         }
 
-        // --- FETCH ENGINE ---
         async function fetchAllData() {
             try {
                 const pins = ['v0', 'v1', 'v2', 'v3', 'v4'];
@@ -291,10 +278,8 @@
                 const dist = Number(values[3]);
                 const sound = Number(values[4]);
 
-                // .toFixed(1) forces the numbers to display professionally with 1 decimal place!
                 document.getElementById('val-temp').innerText = isNaN(temp) ? "--" : temp.toFixed(1);
                 document.getElementById('val-hum').innerText = isNaN(hum) ? "--" : hum.toFixed(1);
-                
                 document.getElementById('val-light').innerText = isNaN(light) ? "--" : light;
                 document.getElementById('val-dist').innerText = isNaN(dist) ? "--" : dist;
                 document.getElementById('val-sound').innerText = isNaN(sound) ? "--" : sound;
